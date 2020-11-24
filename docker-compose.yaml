@@ -1,0 +1,11 @@
+version: "3.1"
+services:
+  postgres:
+    image: postgres:13-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: bank-api
+      POSTGRES_PASSWORD: bank-api
+      POSTGRES_DB: bank-api
+    ports:
+      - 5432:5432
