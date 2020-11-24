@@ -14,6 +14,8 @@ use color_eyre::Result;
 use handlers::app_config;
 use tracing::{info, instrument};
 
+use actix_web_prom::PrometheusMetrics;
+
 #[actix_rt::main]
 #[instrument]
 async fn main() -> Result<()> {
@@ -27,17 +29,20 @@ async fn main() -> Result<()> {
 
     info!("Starting server at http://{}:{}/", config.host, config.port);
 
-    HttpServer::new(move || {
-        App::new()
-            .wrap(Logger::default())
-            .data(pool.clone())
-            .data(hashing.clone())
-            .data(params.clone())
-            .configure(app_config)
-    })
-    .bind(format!("{}:{}", config.host, config.port))?
-    .run()
-    .await?;
+    let prometheus = PrometheusMetrics::new("api", Some("/metrics"),None);
+
+        HttpServer::new(move || {
+            App::new()
+                .wrap(Logger::default())
+                .wrap(prometheus.clone())
+                .data(pool.clone())
+                .data(hashing.clone())
+                .data(params.clone())
+                .configure(app_config)
+        })
+        .bind(format!("{}:{}", config.host, config.port))?
+        .run()
+        .await?;
 
     Ok(())
 }
