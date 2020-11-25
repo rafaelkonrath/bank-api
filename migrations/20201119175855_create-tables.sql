@@ -16,7 +16,7 @@ create table users (
 CREATE TABLE IF NOT EXISTS transactions
 (
     id     BIGSERIAL PRIMARY KEY,
-    user_id VARCHAR NOT NULL,
+    user_id uuid NOT NULL,
     created_at TIMESTAMP NOT NULL default current_timestamp,
     results jsonb NOT NULL
 );
