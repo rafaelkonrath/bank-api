@@ -4,19 +4,22 @@ use validator::Validate;
 #[derive(Debug, sqlx::FromRow, Serialize)]
 //#[serde(rename_all = "camelCase")]
 pub struct Transactions {
-    results: String,
+    pub results: String,
 }
-
 
 #[derive(Debug, sqlx::FromRow, Serialize)]
 //#[serde(rename_all = "camelCase")]
+pub struct CheckCache {
+    pub results: i64,
+}
+
+#[derive(Debug, sqlx::FromRow, Deserialize, Serialize)]
 pub struct TransactionsResults {
     results: Vec<TransactionsAccount>,
-    status: String,
+    //status: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-//#[serde(rename_all = "camelCase")]
 pub struct TransactionsAccount {
     timestamp: String,
     description: String,
@@ -30,7 +33,6 @@ pub struct TransactionsAccount {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-//#[serde(rename_all = "camelCase")]
 pub struct Balance {
     currency: String,
     amount: f32,

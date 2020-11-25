@@ -1,12 +1,10 @@
 mod auth;
 mod user;
-mod bank;
 
 use crate::errors::AppError;
 use actix_web::{web, HttpResponse};
 use auth::auth;
-use user::{create_user, me, callback_code};
-use bank::{{transactions}};
+use user::{create_user, me, callback_code, transactions};
 
 type AppResult<T> = Result<T, AppError>;
 type AppResponse = AppResult<HttpResponse>;
@@ -37,4 +35,5 @@ pub fn app_config(config: &mut web::ServiceConfig) {
 pub async fn health() -> HttpResponse {
     HttpResponse::Ok().finish()
 }
+
 

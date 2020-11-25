@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
 
-#[derive(sqlx::FromRow, Serialize)]
+#[derive(Debug, sqlx::FromRow, Serialize)]
 pub struct User {
     pub id: Uuid,
     pub username: Option<String>,
@@ -15,7 +15,7 @@ pub struct User {
     pub active: bool,
     pub code: Option<String>,
     //#[serde(skip_serializing)]
-    pub access_token: String,
+    pub access_token: Option<String>,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
 }
@@ -40,4 +40,11 @@ pub struct UpdateCode {
 pub struct GetToken {
     pub access_token: String,
 }
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct UpdateTransaction {
+    pub trans_results: Option<String>,
+}
+
+
 
