@@ -174,7 +174,7 @@ impl UserRepository {
         (r#"SELECT cast(json_agg(row_to_json(results)) as text) as results
             FROM (
                 SELECT results->>'transaction_category' as transaction_category,
-                sum(cast(results->>'amount' as numeric)) as total_debits  from "transactions"
+                sum(cast(results->>'amount' as numeric)) as total_amount  from "transactions"
                 WHERE user_id=$1
                 AND (results->>'timestamp')::timestamp with time zone > current_timestamp - interval '1 week'  
                 GROUP BY results->>'transaction_category'
@@ -191,7 +191,7 @@ impl UserRepository {
         (r#"SELECT cast(json_agg(row_to_json(results)) as text) as results
             FROM (
                 SELECT results->>'transaction_category' as transaction_category,
-                sum(cast(results->>'amount' as numeric)) as total_debits  from "transactions"
+                sum(cast(results->>'amount' as numeric)) as total_amount  from "transactions"
                 WHERE user_id=$1
                 AND (results->>'timestamp')::timestamp with time zone > current_timestamp - interval '1 month'  
                 GROUP BY results->>'transaction_category'
