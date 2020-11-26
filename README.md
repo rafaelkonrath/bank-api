@@ -81,13 +81,16 @@ curl --request POST \
   curl --request GET \
   --url http://localhost:3000/v1/transactions/monthly \
   --header 'authorization: Bearer <jwt_token>'
-
+  
+  #  Total Monthly transactions
+  curl --request GET \
+  --url http://localhost:3000/v1/transactions/monthly/total \
+  --header 'authorization: Bearer <jwt_token>'
 
   #  All Credit transactions
   curl --request GET \
   --url http://localhost:3000/v1/transactions/credit \
   --header 'authorization: Bearer <jwt_token>'
-
 
   #  All Debit transactions
   curl --request GET \
