@@ -1,5 +1,4 @@
-use serde::{Serialize, Deserialize};
-use validator::Validate;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, sqlx::FromRow, Serialize)]
 //#[serde(rename_all = "camelCase")]
@@ -15,30 +14,17 @@ pub struct CheckCache {
 
 #[derive(Debug, sqlx::FromRow, Deserialize, Serialize)]
 pub struct TransactionsResults {
-    results: Vec<TransactionsAccount>,
+    pub results: Vec<TransactionsAccount>,
     //status: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct TransactionsAccount {
-    timestamp: String,
-    description: String,
-    transaction_type: String,
-    transaction_category: String,
-    transaction_classification: Vec<String>,
-    amount: f32,
-    currency: String,
-    transaction_id: String,
-    running_balance: Balance,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct Balance {
-    currency: String,
-    amount: f32,
-}
-
-#[derive(Debug, Deserialize, Validate)]
-pub struct UpdateCode {
-    pub code: String,
+    pub timestamp: String,
+    pub description: String,
+    pub transaction_type: String,
+    pub transaction_category: String,
+    pub amount: f32,
+    pub currency: String,
+    pub transaction_id: String,
 }

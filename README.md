@@ -57,13 +57,43 @@ curl --request POST \
   --url http://localhost:3000/me \
   --header 'authorization: Bearer <jwt_token>'
 
-- Get user bank transactions: `GET` /transactions
+- Get user bank transactions: `GET` /v1/transactions
   ```
+  # Collect all transactions
   curl --request GET \
-  --url http://localhost:3000/transactions \
+  --url http://localhost:3000/v1/transactions \
+  --header 'authorization: Bearer <jwt_token>'
+  
+
+  #  Weekly transactions
+  curl --request GET \
+  --url http://localhost:3000/v1/transactions/weekly \
   --header 'authorization: Bearer <jwt_token>'
 
 
+  # Total Weekly transactions
+  curl --request GET \
+  --url http://localhost:3000/v1/transactions/weekly/total \
+  --header 'authorization: Bearer <jwt_token>'
+
+
+  #  Monthly transactions
+  curl --request GET \
+  --url http://localhost:3000/v1/transactions/monthly \
+  --header 'authorization: Bearer <jwt_token>'
+
+
+  #  All Credit transactions
+  curl --request GET \
+  --url http://localhost:3000/v1/transactions/credit \
+  --header 'authorization: Bearer <jwt_token>'
+
+
+  #  All Debit transactions
+  curl --request GET \
+  --url http://localhost:3000/v1/transactions/Debit \
+  --header 'authorization: Bearer <jwt_token>'
+  ```
 
 
 

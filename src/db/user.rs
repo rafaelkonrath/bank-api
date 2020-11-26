@@ -98,7 +98,7 @@ impl UserRepository {
     #[instrument(skip(self))]
     pub async fn get_cache(&self, user_id: Uuid) -> Result<Transactions> {
         let maybe_cached = sqlx::query_as::<_, Transactions>
-        (r#"select user_id, created_at, (results #>> '{}')::jsonb->>'results' as results from transactions where user_id=$1"#)
+        (r#"SELECT cast(json_agg(results) as text) as results FROM transactions where user_id=$1"#)
             .bind(user_id)
             .fetch_one(&*self.pool)
             .await?;
@@ -109,7 +109,7 @@ impl UserRepository {
     pub async fn save_trans(&self, user_id: Uuid, json_trans: String) -> Result<()> {
         let serialized: Value = serde_json::from_str(&json_trans).unwrap();
         sqlx::query_as::<_, Transactions>(
-            "INSERT INTO transactions (user_id, results) VALUES($1, to_json($2))",
+            r#"INSERT INTO transactions (user_id, results) VALUES($1, to_json($2))"#,
         )
         .bind(user_id)
         .bind(serialized)
@@ -117,6 +117,91 @@ impl UserRepository {
         .await?;
         Ok(())
     }
+
+    #[instrument(skip(self))]
+    pub async fn daily_transactions(&self, user_id: Uuid) -> Result<Option<Transactions>> {
+        let maybe_daily = sqlx::query_as::<_, Transactions>
+        (r#"SELECT cast(json_agg(results) as TEXT) as results FROM transactions WHERE user_id=$1 AND (results->>'timestamp')::timestamp with time zone > current_timestamp - interval '1 day'"#)
+            .bind(user_id)
+            .fetch_optional(&*self.pool)
+            .await?;
+        Ok(maybe_daily)
+    }
+
+    #[instrument(skip(self))]
+    pub async fn weekly_transactions(&self, user_id: Uuid) -> Result<Option<Transactions>> {
+        let maybe_weekly = sqlx::query_as::<_, Transactions>
+        (r#"SELECT cast(json_agg(results) as TEXT) as results FROM transactions WHERE user_id=$1 AND (results->>'timestamp')::timestamp with time zone > current_timestamp - interval '1 week'"#)
+            .bind(user_id)
+            .fetch_optional(&*self.pool)
+            .await?;
+        Ok(maybe_weekly)
+    }
+    
+    #[instrument(skip(self))]
+    pub async fn monthly_transactions(&self, user_id: Uuid) -> Result<Option<Transactions>> {
+        let maybe_monthly = sqlx::query_as::<_, Transactions>
+        (r#"SELECT cast(json_agg(results) as TEXT) as results FROM transactions WHERE user_id=$1 AND (results->>'timestamp')::timestamp with time zone > current_timestamp - interval '1 month'"#)
+            .bind(user_id)
+            .fetch_optional(&*self.pool)
+            .await?;
+        Ok(maybe_monthly)
+    }
+
+    #[instrument(skip(self))]
+    pub async fn credit(&self, user_id: Uuid) -> Result<Option<Transactions>> {
+        let maybe_credit = sqlx::query_as::<_, Transactions>
+        (r#"SELECT cast(json_agg(results) as text) as results FROM transactions WHERE user_id=$1 AND results ->> 'transaction_type' = 'CREDIT'"#)
+            .bind(user_id)
+            .fetch_optional(&*self.pool)
+            .await?;
+        Ok(maybe_credit)
+    }
+
+    #[instrument(skip(self))]
+    pub async fn debit(&self, user_id: Uuid) -> Result<Option<Transactions>> {
+        let maybe_debit = sqlx::query_as::<_, Transactions>
+        (r#"SELECT cast(json_agg(results) as text) as results FROM transactions WHERE user_id=$1 AND results ->> 'transaction_type' = 'DEBIT'"#)
+            .bind(user_id)
+            .fetch_optional(&*self.pool)
+            .await?;
+        Ok(maybe_debit)
+    }
+    
+    #[instrument(skip(self))]
+    pub async fn total_week_transactions(&self, user_id: Uuid) -> Result<Option<Transactions>> {
+        let maybe_total = sqlx::query_as::<_, Transactions>
+        (r#"SELECT cast(json_agg(row_to_json(results)) as text) as results
+            FROM (
+                SELECT results->>'transaction_category' as transaction_category,
+                sum(cast(results->>'amount' as numeric)) as total_amount  from "transactions"
+                WHERE user_id=$1
+                AND (results->>'timestamp')::timestamp with time zone > current_timestamp - interval '1 week'  
+                GROUP BY results->>'transaction_category'
+            ) results"#)
+            .bind(user_id)
+            .fetch_optional(&*self.pool)
+            .await?;
+        Ok(maybe_total)
+    }
+    
+    #[instrument(skip(self))]
+    pub async fn total_month_transactions(&self, user_id: Uuid) -> Result<Option<Transactions>> {
+        let maybe_total = sqlx::query_as::<_, Transactions>
+        (r#"SELECT cast(json_agg(row_to_json(results)) as text) as results
+            FROM (
+                SELECT results->>'transaction_category' as transaction_category,
+                sum(cast(results->>'amount' as numeric)) as total_amount  from "transactions"
+                WHERE user_id=$1
+                AND (results->>'timestamp')::timestamp with time zone > current_timestamp - interval '1 month'  
+                GROUP BY results->>'transaction_category'
+            ) results"#)
+            .bind(user_id)
+            .fetch_optional(&*self.pool)
+            .await?;
+        Ok(maybe_total)
+    }
+    
 }
 
 impl FromRequest for UserRepository {
