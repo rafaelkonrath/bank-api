@@ -5,6 +5,7 @@ use crate::{
     db,
     db::user::UserRepository,
     errors::AppError,
+    models::trans::TransactionsResults,
     models::user::{NewUser, User},
 };
 use actix_web::web;
@@ -90,6 +91,79 @@ pub async fn me(user: AuthenticatedUser, repository: UserRepository) -> AppRespo
     Ok(HttpResponse::Ok().json(user))
 }
 
+#[instrument[skip(repository)]]
+pub async fn daily_transactions(user: AuthenticatedUser, repository: UserRepository) -> AppResponse {
+    let daily = repository
+        .daily_transactions(user.0)
+        .await?
+        .ok_or(AppError::INTERNAL_ERROR)?;
+
+    let serialized: Value = serde_json::from_str(&daily.results as &str).unwrap();
+    Ok(HttpResponse::Ok().json(serialized))
+}
+
+#[instrument[skip(repository)]]
+pub async fn weekly_transactions(user: AuthenticatedUser, repository: UserRepository) -> AppResponse {
+    let weekly = repository
+        .weekly_transactions(user.0)
+        .await?
+        .ok_or(AppError::INTERNAL_ERROR)?;
+    let serialized: Value = serde_json::from_str(&weekly.results as &str).unwrap();
+    Ok(HttpResponse::Ok().json(serialized))
+}
+
+#[instrument[skip(repository)]]
+pub async fn monthly_transactions(user: AuthenticatedUser, repository: UserRepository) -> AppResponse {
+    let monthly = repository
+        .monthly_transactions(user.0)
+        .await?
+        .ok_or(AppError::INTERNAL_ERROR)?;
+    let serialized: Value = serde_json::from_str(&monthly.results as &str).unwrap();
+    Ok(HttpResponse::Ok().json(serialized))
+}
+
+#[instrument[skip(repository)]]
+pub async fn credit(user: AuthenticatedUser, repository: UserRepository) -> AppResponse {
+    let credit = repository
+        .credit(user.0)
+        .await?
+        .ok_or(AppError::INTERNAL_ERROR)?;
+    let serialized: Value = serde_json::from_str(&credit.results as &str).unwrap();
+    Ok(HttpResponse::Ok().json(serialized))
+}
+
+#[instrument[skip(repository)]]
+pub async fn debit(user: AuthenticatedUser, repository: UserRepository) -> AppResponse {
+    let debit = repository
+        .debit(user.0)
+        .await?
+        .ok_or(AppError::INTERNAL_ERROR)?;
+    let serialized: Value = serde_json::from_str(&debit.results as &str).unwrap();
+    Ok(HttpResponse::Ok().json(serialized))
+}
+
+#[instrument[skip(repository)]]
+pub async fn total_week_transactions(user: AuthenticatedUser, repository: UserRepository) -> AppResponse {
+    let total_week = repository
+        .total_week_transactions(user.0)
+        .await?
+        .ok_or(AppError::INTERNAL_ERROR)?;
+    let serialized: Value = serde_json::from_str(&total_week.results as &str).unwrap();
+    Ok(HttpResponse::Ok().json(serialized))
+}
+
+#[instrument[skip(repository)]]
+pub async fn total_month_transactions(user: AuthenticatedUser, repository: UserRepository) -> AppResponse {
+    let total_month = repository
+        .total_month_transactions(user.0)
+        .await?
+        .ok_or(AppError::INTERNAL_ERROR)?;
+    let serialized: Value = serde_json::from_str(&total_month.results as &str).unwrap();
+    Ok(HttpResponse::Ok().json(serialized))
+}
+
+
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct AuthRequest {
     code: String,
@@ -164,14 +238,25 @@ pub async fn transactions(
             .send()
             .await
             .expect("Getting Transactions");
+        
         // Check for 200 status
         // and save resquest in the database
         if res.status().is_success() {
+            
             let body = res.text().await.expect("Reading Body");
-            let serialized: Value = serde_json::from_str(&body).unwrap();
-            repository
-                .save_trans(user_account, serialized.to_string())
-                .await?;
+            //let deserialize: TransactionsResults = serde_json::from_str(&body).unwrap();
+            //let serialized: &TransactionsResults = serde_json::to_string(&body).unwrap();
+
+            let resp: TransactionsResults = serde_json::from_str(&body).unwrap();
+            for model in &resp.results {
+                //println!("{:?}", serde_json::to_string(&model));
+                //let form = format!("{:?}", model);
+                repository.save_trans(user_account, serde_json::to_string(&model).unwrap()).await?;
+            }
+
+            let user_cached = repository.get_cache(user_account)
+            .await?;
+            let serialized: Value = serde_json::from_str(&user_cached.results as &str).unwrap();
 
             Ok(HttpResponse::Ok().json(serialized))
         } else {
@@ -182,8 +267,10 @@ pub async fn transactions(
         }
     } else {
         // retrieve data from local database
-        let user_cached = repository.get_cache(user_account).await?;
+        let user_cached = repository.get_cache(user_account)
+            .await?;
         let serialized: Value = serde_json::from_str(&user_cached.results as &str).unwrap();
+        
         Ok(HttpResponse::Ok().json(serialized))
     }
 }
