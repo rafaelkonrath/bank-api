@@ -94,7 +94,7 @@ curl --request POST \
 
   #  All Debit transactions
   curl --request GET \
-  --url http://localhost:3000/v1/transactions/Debit \
+  --url http://localhost:3000/v1/transactions/debit \
   --header 'authorization: Bearer <jwt_token>'
   ```
 
